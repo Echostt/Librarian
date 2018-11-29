@@ -21,7 +21,7 @@ local validBookTitles = {
 	"The Alliance of Lordaeron"
 }
 
---TEXT FRAME
+--MAIN TEXT FRAME
 function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	if BookObjs == nil then
 		BookObjs = {}
@@ -38,7 +38,7 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	--scrollframe 
 	scrollframe = CreateFrame("ScrollFrame", nil, TextBorderFrame) 
 	scrollframe:SetPoint("TOPLEFT", 0, 0) 
-	scrollframe:SetPoint("BOTTOMRIGHT", 0, 0) 
+	scrollframe:SetPoint("BOTTOMRIGHT", 0, 0)
 	local texture = scrollframe:CreateTexture() 
 	texture:SetAllPoints() 
 	texture:SetTexture(.5,.5,.5,1) 
@@ -48,7 +48,7 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate") 
 	scrollbar:SetPoint("TOPLEFT", TextBorderFrame, "TOPRIGHT", -10, -20) 
 	scrollbar:SetPoint("BOTTOMLEFT", TextBorderFrame, "BOTTOMRIGHT", -10, 35) 
-	scrollbar:SetMinMaxValues(1, 250) 
+	scrollbar:SetMinMaxValues(1, 700) 
 	scrollbar:SetValueStep(1) 
 	scrollbar.scrollStep = 1 
 	scrollbar:SetValue(0) 
@@ -59,17 +59,17 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	end) 
 	TextBorderFrame.scrollbar = scrollbar 
 	
-	
+	--content
 	TextFrame:ClearAllPoints()
-	
-	TextFrame:SetHeight(450)
+	TextFrame:SetHeight(1100)
 	TextFrame:SetWidth(450)
 
 	TextFrame.text = TextFrame:CreateFontString(nil, "BACKGROUND", "GameFontNormal_NoShadow")
 	TextFrame.text:SetTextColor(0, 0, 0, 1)
-	TextFrame.text:SetAllPoints()
-	TextFrame.text:SetText(ItemTextGetItem() .. "\n\n")
-	TextFrame:SetPoint("CENTER", 0, 0)
+	TextFrame.text:SetAllPoints(TextFrame)
+	TextFrame.text:SetPoint("TOPLEFT")
+	TextFrame.text:SetJustifyV("TOP")
+	TextFrame.text:SetText("\n" .. ItemTextGetItem() .. "\n\n")
 	
 	scrollframe.content = TextFrame 
 	scrollframe:SetScrollChild(TextFrame)
@@ -81,7 +81,8 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 end
 
 function TextFrameEvents:ITEM_TEXT_READY(...)
-	GetBookText()
+	local bookText = GetBookText()
+	for _ in pairs(bookText) do TextFrame.text:SetText(TextFrame.text:GetText() .. "\n" .. bookText[_]) end
 end
 
 function TextFrameEvents:PLAYER_STARTED_MOVING(...)
@@ -102,7 +103,7 @@ for k,v in pairs(TextFrameEvents) do
 	TextFrame:RegisterEvent(k);
 end
 
---END TEXT FRAME
+--END MAIN TEXT FRAME
 
 
 --BOOK FRAME
@@ -144,17 +145,19 @@ function LoadBookList()
 	BookFrame.text:SetText(t)
 end
 
+local bookTextPos
 function GetBookText()
-	local t = ""
+	local t = {}
+	bookTextPos = 1
 	if ItemTextGetText() ~= nil then
 		while ItemTextHasNextPage() do
-			t = t .. ItemTextGetText()
+			t[bookTextPos] = ItemTextGetText() .. " "
 			ItemTextNextPage()
-			t = t .. " "
+			bookTextPos = bookTextPos + 1
+			print("bookTextPos = " .. bookTextPos)
 		end
-		TextFrame.text:SetText(TextFrame.text:GetText() .. t)
-		return t
 	end
+	return t
 end
 
 SLASH_LIBCHECK1 = "/lib"
