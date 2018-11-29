@@ -1,0 +1,7 @@
+##Interface: 80000
+##Title: Librarian
+##Author: Echostt
+##Notes: A collection of books found within the World of Warcraft
+##SavedVariables: BookObjs
+
+main.lua
