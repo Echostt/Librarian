@@ -11,6 +11,7 @@
 
 local TextBorderFrame = CreateFrame("Frame", null, UIParent)
 local TextFrame = CreateFrame("Frame", null, scrollframe)
+TextFrame:EnableMouseWheel(1)
 local BookFrame = CreateFrame("Frame", null, UIParent)
 local TextFrameEvents = {}
 local BookFrameEvents = {}
@@ -37,8 +38,8 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	
 	--scrollframe 
 	scrollframe = CreateFrame("ScrollFrame", nil, TextBorderFrame) 
-	scrollframe:SetPoint("TOPLEFT", 0, 0) 
-	scrollframe:SetPoint("BOTTOMRIGHT", 0, 0)
+	scrollframe:SetPoint("TOPLEFT", 0, -25) 
+	scrollframe:SetPoint("BOTTOMRIGHT", 0, 35)
 	local texture = scrollframe:CreateTexture() 
 	texture:SetAllPoints() 
 	texture:SetTexture(.5,.5,.5,1) 
@@ -80,13 +81,31 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	scrollbar:Show()
 end
 
+local bookTextPos = 1
+local bookText = {}
+local isBookFinished = false
 function TextFrameEvents:ITEM_TEXT_READY(...)
-	local bookText = GetBookText()
-	for _ in pairs(bookText) do TextFrame.text:SetText(TextFrame.text:GetText() .. "\n" .. bookText[_]) end
+	if ItemTextGetText() ~= nil then
+		bookText[bookTextPos] = ItemTextGetText() .. " "
+		bookTextPos = bookTextPos + 1
+		if ItemTextHasNextPage() then
+			ItemTextNextPage()
+		else
+			isBookFinished = true
+		end
+	end
+	if isBookFinished then
+		for _ in pairs(bookText) do TextFrame.text:SetText(TextFrame.text:GetText() .. "\n" .. bookText[_]) end
+		isBookFinished = false
+		bookText = {}
+		bookTextPos = 1
+	end
 end
+
 
 function TextFrameEvents:PLAYER_STARTED_MOVING(...)
 	if TextFrame.text ~= nil then
+		bookTextPos = 1
 		TextFrame.text:SetText("")
 		TextFrame:Hide()
 		scrollframe:Hide()
@@ -95,9 +114,17 @@ function TextFrameEvents:PLAYER_STARTED_MOVING(...)
 	end
 end
 
+TextFrame:SetScript("OnMouseWheel", function(...)
+	if select(2, ...) == 1 then
+		TextBorderFrame.scrollbar:SetValue(TextBorderFrame.scrollbar:GetValue() - 16)
+	else
+		TextBorderFrame.scrollbar:SetValue(TextBorderFrame.scrollbar:GetValue() + 16)
+	end
+end)
+
 TextFrame:SetScript("OnEvent", function(self, event, ...)
 	TextFrameEvents[event](self, ...);
-end);
+end)
 
 for k,v in pairs(TextFrameEvents) do
 	TextFrame:RegisterEvent(k);
@@ -145,20 +172,8 @@ function LoadBookList()
 	BookFrame.text:SetText(t)
 end
 
-local bookTextPos
-function GetBookText()
-	local t = {}
-	bookTextPos = 1
-	if ItemTextGetText() ~= nil then
-		while ItemTextHasNextPage() do
-			t[bookTextPos] = ItemTextGetText() .. " "
-			ItemTextNextPage()
-			bookTextPos = bookTextPos + 1
-			print("bookTextPos = " .. bookTextPos)
-		end
-	end
-	return t
-end
+
+
 
 SLASH_LIBCHECK1 = "/lib"
 function SlashCmdList.LIBCHECK(msg)
