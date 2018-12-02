@@ -9,15 +9,70 @@
 -- dateFound = date that book was discovered
 -- location = area in the world where book is found
 
+
+--https://www.wowhead.com/book-objects
+
 local TextBorderFrame = CreateFrame("Frame", null, UIParent)
 local TextFrame = CreateFrame("Frame", null, scrollframe)
 TextFrame:EnableMouseWheel(1)
-local BookFrame = CreateFrame("Frame", null, UIParent)
+local BookBorderFrame = CreateFrame("Frame", null, UIParent)
+local BookFrame = CreateFrame("Frame", null, bookscrollframe)
+BookFrame:EnableMouseWheel(1)
 local TextFrameEvents = {}
 local BookFrameEvents = {}
 local bookCount
+
 local validBookTitles = {
+	"A Most Famous Bill of Sale",
+	"A Zombie's Guide to Proper Nutrition",
+	"Account of the Raising of a Frost Wyrm",
+	"Adherent Note",
+	"Admiral Barean Westwind",
+	"Admiral Taylor",
+	"Aegwynn and the Dragon Hunt",
 	"Aftermath of the Second War", 
+	"Age of a Hundred Kings",
+	"Agents of Order",
+	"Airbase in a Box Brochure",
+	"Airwyn's Journal",
+	"Akali",
+	"Altar of Zanza",
+	"Always Remember",
+	"Amber",
+	"Ancient Highborne Tome",
+	"Ancient Nazmani Tablet",
+	"Ancient Neltharion Tablets",
+	"Ancient Sap Feeder",
+	"Ancient Tidesage Scroll",
+	"Another Direhorn Casualty",
+	"Apothecary Tins of Yao Firmpaw",
+	"Aquarium of Wonders",
+	"Aquatic Wonders",
+	"Arathor and the Troll Wars",
+	"Archavon's Log",
+	"Archbishop Alonsus Faol",
+	"Archimonde's Return and the Flight to Kalimdor",
+	"Archmage Antonidas",
+	"Archmage Khadgar of the Kirin Tor",
+	"Arellas Fireleaf",
+	"Asgrim the Dreadkiller",
+	"ATTENTION: Geists",
+	"Baelog's Journal",
+	"Banner of the Mantid Empire",
+	"Barely Legible Scroll",
+	"Battlelog of Warlord Bloodhilt",
+	"Beasts of Barren Savannas",
+	"Beasts of the Sky",
+	"Beyond the Dark Portal",
+	"Bilgewater Cartel Contract",
+	"Binding Raptors",
+	"Carelessly Dropped Note",
+	"Caruk the Simple",
+	"Carved Bronze Mirror",
+	"Charge of the Dragonflights",
+	"Civil War in the Plaguelands",
+	
+	
 	"The Guardians of Tirisfal",
 	"The Alliance of Lordaeron"
 }
@@ -111,6 +166,8 @@ function TextFrameEvents:PLAYER_STARTED_MOVING(...)
 		scrollframe:Hide()
 		TextBorderFrame:Hide()
 		scrollbar:Hide()
+		bookscrollbar:Hide()
+		BookBorderFrame:Hide()
 	end
 end
 
@@ -136,16 +193,49 @@ end
 --BOOK FRAME
 
 function BookFrameEvents:ITEM_TEXT_BEGIN(...)
-	BookFrame:ClearAllPoints()
-	BookFrame:SetBackdrop(StaticPopup1:GetBackdrop())
-	BookFrame:SetHeight(500)
-	BookFrame:SetWidth(300)
+	--parent frame
+	BookBorderFrame:SetSize(400, 500)
+	BookBorderFrame:SetPoint("CENTER", -450, 0)
+	BookBorderFrame:SetBackdrop(StaticPopup1:GetBackdrop())
+	
+	--scrollframe 
+	bookscrollframe = CreateFrame("ScrollFrame", nil, BookBorderFrame) 
+	bookscrollframe:SetPoint("TOPLEFT", 0, -25) 
+	bookscrollframe:SetPoint("BOTTOMRIGHT", 0, 35)
+	
+	--scrollbar 
+	bookscrollbar = CreateFrame("Slider", nil, bookscrollframe, "UIPanelScrollBarTemplate") 
+	bookscrollbar:SetPoint("TOPLEFT", BookBorderFrame, "TOPRIGHT", -15, -20) 
+	bookscrollbar:SetPoint("BOTTOMLEFT", BookBorderFrame, "BOTTOMRIGHT", -15, 35) 
+	bookscrollbar:SetMinMaxValues(1, 700) 
+	bookscrollbar:SetValueStep(1) 
+	bookscrollbar.scrollStep = 1 
+	bookscrollbar:SetValue(0) 
+	bookscrollbar:SetWidth(16) 
+	bookscrollbar:SetScript("OnValueChanged", 
+	function (self, value) 
+		self:GetParent():SetVerticalScroll(value) 
+	end) 
+	BookBorderFrame.scrollbar = bookscrollbar 
 
+	--content
+	BookFrame:ClearAllPoints()
+	BookFrame:SetHeight(1500)
+	BookFrame:SetWidth(400)
 	BookFrame.text = BookFrame:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
 	BookFrame.text:SetAllPoints()
 	BookFrame.text:SetText("Books")
-	BookFrame:SetPoint("CENTER", -400, 0)
+	BookFrame:SetPoint("CENTER", 0, 0)
+	BookFrame.text:SetPoint("TOPLEFT")
+	BookFrame.text:SetJustifyV("TOP")
+	
+	bookscrollframe.content = BookFrame
+	bookscrollframe:SetScrollChild(BookFrame)
+	
 	BookFrame:Show()
+	bookscrollframe:Show()
+	BookBorderFrame:Show()
+	bookscrollbar:Show()
 	LoadBookList()
 end
 
@@ -164,15 +254,33 @@ for k,v in pairs(BookFrameEvents) do
 	BookFrame:RegisterEvent(k);
 end
 
+BookFrame:SetScript("OnMouseWheel", function(...)
+	if select(2, ...) == 1 then
+		BookBorderFrame.scrollbar:SetValue(BookBorderFrame.scrollbar:GetValue() - 16)
+	else
+		BookBorderFrame.scrollbar:SetValue(BookBorderFrame.scrollbar:GetValue() + 16)
+	end
+end)
+
 --END BOOK FRAME
 
 function LoadBookList()
 	local t = "Book\n"
-	for _ in pairs(validBookTitles) do t = t .. "\n" .. validBookTitles[_] end
-	BookFrame.text:SetText(t)
+	local yOff = 0
+	for _ in pairs(validBookTitles) do
+		local Button = CreateFrame("Button", validBookTitles[_], BookFrame, "UIPanelButtonTemplate")
+		Button:SetWidth(150)
+		Button:SetHeight(25)
+		Button:SetPoint("TOP", 0, yOff)
+		Button:SetText(Button:GetName())
+		Button:RegisterForClicks("AnyUp")
+		Button:SetScript("OnClick", function()
+			print(Button:GetName())
+		end )
+		yOff = yOff - 20
+	end
+	--BookFrame.text:SetText(t)
 end
-
-
 
 
 SLASH_LIBCHECK1 = "/lib"
