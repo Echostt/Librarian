@@ -71,18 +71,40 @@ local validBookTitles = {
 	"Carved Bronze Mirror",
 	"Charge of the Dragonflights",
 	"Civil War in the Plaguelands",
-	
+	"Coming of Age",
+	"Compendium of Fallen Heroes",
+	"Corpulous' Mess Hall Rules",
+	"Cracked Tablet",
+	"Cursed Gravestone",
+	"Cycle of the Mantid",
+	"Danath Trollbane",
+	"Dark Keeper Nameplate",
+	"De Gral Kantik",
+	"Decorated Gravestone",
+	"Decorated Headstone",
+	"Desolate Deserts",
+	"Devilsaur Calling Tips",
+	"Dog-Eared Page",
+	"Dominance",
+	"Doren's Logs",
+	"Dorgar Stoenbrow",
+	"Drust Stele: Breath Into Stone",
+	"Drust Stele: Conflict",
+	"Drust Stele: Constructs",
+	"Drust Stele: Protectors of the Forest",
+	"Drust Stele: Sacrifice",
+	"Drust Stele: The Circle",
+	"Drust Stele: The Cycle",
+	"Drust Stele: The Flayed Man",
+	"Drust Stele: The Ritual",
+	"Drust Stele: The Tree",
 	
 	"The Guardians of Tirisfal",
 	"The Alliance of Lordaeron"
 }
 
---MAIN TEXT FRAME
-function TextFrameEvents:ITEM_TEXT_BEGIN(...)
-	if BookObjs == nil then
-		BookObjs = {}
-	end
-	
+
+local function LoadTextFrames(...)
 	--parent frame 
 	TextBorderFrame:SetSize(500, 500) 
 	TextBorderFrame:SetPoint("CENTER") 
@@ -104,7 +126,7 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate") 
 	scrollbar:SetPoint("TOPLEFT", TextBorderFrame, "TOPRIGHT", -10, -20) 
 	scrollbar:SetPoint("BOTTOMLEFT", TextBorderFrame, "BOTTOMRIGHT", -10, 35) 
-	scrollbar:SetMinMaxValues(1, 700) 
+	scrollbar:SetMinMaxValues(1, 4000) 
 	scrollbar:SetValueStep(1) 
 	scrollbar.scrollStep = 1 
 	scrollbar:SetValue(0) 
@@ -117,7 +139,7 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	
 	--content
 	TextFrame:ClearAllPoints()
-	TextFrame:SetHeight(1100)
+	TextFrame:SetHeight(8000)
 	TextFrame:SetWidth(450)
 
 	TextFrame.text = TextFrame:CreateFontString(nil, "BACKGROUND", "GameFontNormal_NoShadow")
@@ -125,7 +147,7 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	TextFrame.text:SetAllPoints(TextFrame)
 	TextFrame.text:SetPoint("TOPLEFT")
 	TextFrame.text:SetJustifyV("TOP")
-	TextFrame.text:SetText("\n" .. ItemTextGetItem() .. "\n\n")
+	TextFrame.text:SetText(ItemTextGetItem())
 	
 	scrollframe.content = TextFrame 
 	scrollframe:SetScrollChild(TextFrame)
@@ -134,65 +156,9 @@ function TextFrameEvents:ITEM_TEXT_BEGIN(...)
 	scrollframe:Show()
 	TextBorderFrame:Show()
 	scrollbar:Show()
-end
-
-local bookTextPos = 1
-local bookText = {}
-local isBookFinished = false
-function TextFrameEvents:ITEM_TEXT_READY(...)
-	if ItemTextGetText() ~= nil then
-		bookText[bookTextPos] = ItemTextGetText() .. " "
-		bookTextPos = bookTextPos + 1
-		if ItemTextHasNextPage() then
-			ItemTextNextPage()
-		else
-			isBookFinished = true
-		end
-	end
-	if isBookFinished then
-		for _ in pairs(bookText) do TextFrame.text:SetText(TextFrame.text:GetText() .. "\n" .. bookText[_]) end
-		isBookFinished = false
-		bookText = {}
-		bookTextPos = 1
-	end
-end
-
-
-function TextFrameEvents:PLAYER_STARTED_MOVING(...)
-	if TextFrame.text ~= nil then
-		bookTextPos = 1
-		TextFrame.text:SetText("")
-		TextFrame:Hide()
-		scrollframe:Hide()
-		TextBorderFrame:Hide()
-		scrollbar:Hide()
-		bookscrollbar:Hide()
-		BookBorderFrame:Hide()
-	end
-end
-
-TextFrame:SetScript("OnMouseWheel", function(...)
-	if select(2, ...) == 1 then
-		TextBorderFrame.scrollbar:SetValue(TextBorderFrame.scrollbar:GetValue() - 16)
-	else
-		TextBorderFrame.scrollbar:SetValue(TextBorderFrame.scrollbar:GetValue() + 16)
-	end
-end)
-
-TextFrame:SetScript("OnEvent", function(self, event, ...)
-	TextFrameEvents[event](self, ...);
-end)
-
-for k,v in pairs(TextFrameEvents) do
-	TextFrame:RegisterEvent(k);
-end
-
---END MAIN TEXT FRAME
-
-
---BOOK FRAME
-
-function BookFrameEvents:ITEM_TEXT_BEGIN(...)
+	print("End LoadTextFrames")
+	
+	--/////////////////////////////////////////////////
 	--parent frame
 	BookBorderFrame:SetSize(400, 500)
 	BookBorderFrame:SetPoint("CENTER", -450, 0)
@@ -239,12 +205,35 @@ function BookFrameEvents:ITEM_TEXT_BEGIN(...)
 	LoadBookList()
 end
 
-function BookFrameEvents:PLAYER_STARTED_MOVING(...)
-	if BookFrame.text ~= nil then
-		BookFrame.text:SetText("")
-		BookFrame:Hide()
-	end
+
+local bookTextPos = 1
+local bookText = {}
+local isBookFinished = false
+local bookTextString = ""
+
+
+function TextFrameEvents:PLAYER_STARTED_MOVING(...)
+	CloseAllFrames()
 end
+
+TextFrame:SetScript("OnMouseWheel", function(...)
+	if select(2, ...) == 1 then
+		TextBorderFrame.scrollbar:SetValue(TextBorderFrame.scrollbar:GetValue() - 16)
+	else
+		TextBorderFrame.scrollbar:SetValue(TextBorderFrame.scrollbar:GetValue() + 16)
+	end
+end)
+
+TextFrame:SetScript("OnEvent", function(self, event, ...)
+	TextFrameEvents[event](self, ...);
+end)
+
+for k,v in pairs(TextFrameEvents) do
+	TextFrame:RegisterEvent(k);
+end
+
+--END MAIN TEXT FRAME
+
 
 BookFrame:SetScript("OnEvent", function(self, event, ...)
 	BookFrameEvents[event](self, ...);
@@ -264,6 +253,7 @@ end)
 
 --END BOOK FRAME
 
+--Sets Book Frame's text to available books
 function LoadBookList()
 	local t = "Book\n"
 	local yOff = 0
@@ -276,6 +266,13 @@ function LoadBookList()
 		Button:RegisterForClicks("AnyUp")
 		Button:SetScript("OnClick", function()
 			print(Button:GetName())
+			if SearchForBookTitle(Button:GetName()) == true 
+			and
+			BookObjs[SearchForBookTitle(Button:GetName())].isRead == true then
+				TextFrame.text:SetText(BookObjs[SearchForBookTitle(Button:GetName())].text)
+			else
+				print("Book Not Found")
+			end
 		end )
 		yOff = yOff - 20
 	end
@@ -285,36 +282,51 @@ end
 
 SLASH_LIBCHECK1 = "/lib"
 function SlashCmdList.LIBCHECK(msg)
-	
-	print("slash lib")
 	if msg == "clear" then
 		print("Clearing books")
 		BookObjs = {}
-	else
-		if BookObjs == nil then
-			BookObjs = {}
-		end
-		
-		bookCount = TableLength(BookObjs)
-		print("Date: " .. date("%m/%d/%y"))
-		
-		print("valid book?")
-		print(CheckIfValidBook(ItemTextGetItem()))
-		print(ItemTextGetMaterial())
-		
+		bookCount = 0
+	elseif msg == "books" then
 		print("books: ")
+		print("Date: " .. date("%m/%d/%y"))
 		for i = 1, TableLength(BookObjs), 1 do
+			bookCount = TableLength(BookObjs)
 			print(BookObjs[i].title)
 		end
-		
+	elseif msg == "check" then
+		print("check")
 		local bookFoundAt = SearchForBookTitle(ItemTextGetItem())
-		if bookFoundAt ~= 0 then
+		if CheckIfValidBook(ItemTextGetItem()) == true and bookFoundAt ~= 0 then
 			print("Book " .. ItemTextGetItem() .. " found at: " .. bookFoundAt)
 		else
 			print("Adding book")
-			BookObjs[bookCount + 1] = {title=ItemTextGetItem(), text=GetBookText(), isRead=true}
+			-- BookObj format
+				-- title = name of the text item
+				-- text = text content of the book
+				-- isRead = bool for encountering book
+				-- dateFound = date that book was discovered
+				-- location = area in the world where book is found
+			BookObjs[bookCount + 1] = {
+				title=ItemTextGetItem(),
+				text=bookTextString,
+				isRead=true,
+				dateFound=date("%m/%d/%y"),
+				location="DEFAULT LOCATION"
+			}
 			bookCount = bookCount + 1
 		end
+	else
+		if BookObjs == nil then
+			BookObjs = {}
+		end		
+		
+		--print("valid book?")
+		--print(CheckIfValidBook(ItemTextGetItem()))
+		--print("Matierial:")
+		--print(ItemTextGetMaterial())
+		
+		LoadTextFrames()
+		
 	end
 end
 
@@ -329,10 +341,25 @@ end
 function SearchForBookTitle(bookTitle)
 	for i = 1, bookCount, 1 do
 		if BookObjs[i].title == bookTitle then
+			print("Title: " .. BookObjs[i].title .. " found at: " .. i)
 			return i
 		end
 	end
 	return 0
+end
+
+--Close all open frames
+function CloseAllFrames()
+	if TextFrame.text ~= nil then
+		bookTextPos = 1
+		TextFrame.text:SetText("")
+		TextFrame:Hide()
+		scrollframe:Hide()
+		TextBorderFrame:Hide()
+		scrollbar:Hide()
+		bookscrollbar:Hide()
+		BookBorderFrame:Hide()
+	end
 end
 
 --Pass in title of book object to see if it is within the list of acceptable book objects.
